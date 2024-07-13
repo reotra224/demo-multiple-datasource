@@ -1,0 +1,35 @@
+version: '3'
+services:
+  reading-db:
+    image: mariadb:latest
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: readingdb
+      MARIADB_USER: readingdb
+      MARIADB_PASSWORD: readingdb
+    ports:
+      - "3306:3306"
+    volumes:
+      - mariadb-db:/var/lib/mysql
+      - ./scripts/readingdb-init.sql:/docker-entrypoint-initdb.d/readingdb-init.sql
+  writing-db:
+    image: postgres:latest
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: writingdb
+      POSTGRES_PASSWORD: writingdb
+      POSTGRES_DB: writingdb
+      PGDATA: /postgres/data
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./scripts/writingdb-init.sql:/docker-entrypoint-initdb.d/writingdb-init.sql
+    healthcheck:
+      test: 'pg_isready -q -d writingdb -h writing-db -U writingdb'
+      interval: 3s
+      timeout: 4s
+
+# Names our volume
+volumes:
+  mariadb-db:
